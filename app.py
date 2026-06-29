@@ -91,6 +91,7 @@ def hitung_hisab_jumal(nama):
     surat = 114 if total_nilai % 114 == 0 else total_nilai % 114
     return total_nilai, surat
 
+
 def hitung_juz_hijriah(tanggal):
     if tanggal is None:
         return 0, 0, "", None
@@ -136,15 +137,25 @@ def hitung_juz_hijriah(tanggal):
     
     return juz, total_kurang_19, rincian_str, h
 
+
 def clean_txt(text):
     """Pembersih karakter non-latin agar FPDF tidak error saat cetak"""
     if not isinstance(text, str): return str(text)
-    return text.replace("‘", "'").replace("’", "'").replace("“", '"').replace("”", '"').replace("–", "-").encode('latin-1', 'ignore').decode('latin-1')
+    
+    # Membersihkan simbol yang berisiko membuat FPDF crash
+    replacements = {
+        "‘": "'", "’": "'", "“": '"', "”": '"', "–": "-", "—": "-",
+        "✧": "*", "✦": "*", "✨": "", "💎": "", "📅": "", "🌙": "", "⚠️": ""
+    }
+    for k, v in replacements.items():
+        text = text.replace(k, v)
+        
+    return text.encode('latin-1', 'ignore').decode('latin-1')
+
 
 # ==========================================
 # FUNGSI PEMBUAT PDF (TEMA MISTIS / MANUSKRIP KUNO)
 # ==========================================
-
 class MysticalPDF(FPDF):
     def header(self):
         # Garis tepi (Border) mistis ganda
@@ -154,25 +165,25 @@ class MysticalPDF(FPDF):
         self.set_line_width(0.3)
         self.rect(7, 7, 196, 283) # Garis dalam tipis
         
-        # Ornamen pojok mistis (Simbol Star/Diamond)
+        # Ornamen pojok (Menggunakan ASCII agar tidak error di FPDF)
         self.set_font("Times", 'B', 16)
         self.set_text_color(139, 115, 85)
         self.set_xy(9, 8)
-        self.cell(10, 10, "✧", align="L")
+        self.cell(10, 10, "*", align="L")
         self.set_xy(191, 8)
-        self.cell(10, 10, "✧", align="R")
+        self.cell(10, 10, "*", align="R")
         
         # Kembalikan kursor ke posisi aman untuk isi teks
         self.set_y(15)
 
     def footer(self):
-        # Ornamen pojok bawah
+        # Ornamen pojok bawah (Menggunakan ASCII)
         self.set_font("Times", 'B', 16)
         self.set_text_color(139, 115, 85)
         self.set_xy(9, 279)
-        self.cell(10, 10, "✧", align="L")
+        self.cell(10, 10, "*", align="L")
         self.set_xy(191, 279)
-        self.cell(10, 10, "✧", align="R")
+        self.cell(10, 10, "*", align="R")
         
         # Penomoran Halaman Bergaya Kuno
         self.set_y(-15)
@@ -180,13 +191,9 @@ class MysticalPDF(FPDF):
         self.set_text_color(100, 100, 100)
         self.cell(0, 10, f"~ Lembar Penyingkapan {self.page_no()} ~", 0, 0, 'C')
 
-def clean_txt(text):
-    """Pembersih karakter non-latin agar FPDF tidak error saat cetak"""
-    if not isinstance(text, str): return str(text)
-    return text.replace("‘", "'").replace("’", "'").replace("“", '"').replace("”", '"').replace("–", "-").encode('latin-1', 'ignore').decode('latin-1')
 
 def buat_pdf(nama, tgl_lahir_str, tgl_hijriah_str, tgl_rincian_str, total_nama, surat, total_tgl, juz, profil):
-    pdf = MysticalPDF() # Menggunakan kelas PDF kustom yang baru kita buat
+    pdf = MysticalPDF() 
     pdf.add_page()
     
     # Header Utama & Judul
@@ -198,9 +205,9 @@ def buat_pdf(nama, tgl_lahir_str, tgl_hijriah_str, tgl_rincian_str, total_nama, 
     pdf.cell(0, 6, txt="~ Ekstraksi Resonansi Jiwa & Manifestasi Nasib ~", ln=True, align='C')
     pdf.ln(3)
     
-    # Garis Pembatas Mistis
+    # Garis Pembatas Mistis (ASCII)
     pdf.set_font("Times", '', 14)
-    pdf.cell(0, 5, txt="✦  ✧  ✦  ✧  ✦", ln=True, align='C')
+    pdf.cell(0, 5, txt="* * * * *", ln=True, align='C')
     pdf.ln(8)
     
     # 1. Identitas & Model Matematis
@@ -231,7 +238,7 @@ def buat_pdf(nama, tgl_lahir_str, tgl_hijriah_str, tgl_rincian_str, total_nama, 
     pdf.ln(6)
     
     pdf.set_text_color(139, 115, 85)
-    pdf.cell(0, 5, txt="~ ✧ ~", ln=True, align='C')
+    pdf.cell(0, 5, txt="~ * ~", ln=True, align='C')
     pdf.ln(5)
     
     # 2. Detail Karakter
@@ -298,8 +305,6 @@ def buat_pdf(nama, tgl_lahir_str, tgl_hijriah_str, tgl_rincian_str, total_nama, 
         
     return pdf.output(dest='S').encode('latin-1')
 
-# ==========================================
-# Lanjutkan ke bagian 3. ANTARMUKA PENGGUNA (UI) yang sudah Anda miliki...
 
 # ==========================================
 # 3. ANTARMUKA PENGGUNA (UI)

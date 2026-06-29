@@ -3,7 +3,7 @@ import streamlit as st
 import datetime
 from database_juz import db_juz
 from fpdf import FPDF
-from hijri_converter import Gregorian # Menggunakan hijri_converter sesuai permintaan sebelumnya
+from hijri_converter import Gregorian
 
 # Hubungan indeks bulan dengan nama bulan Hijriah standar
 BULAN_HIJRIAH = [
@@ -59,7 +59,6 @@ st.markdown("""
     </style>
 """, unsafe_allow_html=True)
 
-
 # ==========================================
 # 2. MESIN KALKULATOR & FUNGSI LOGIKA
 # ==========================================
@@ -96,16 +95,13 @@ def hitung_juz_hijriah(tanggal):
     if tanggal is None:
         return 0, 0, "", None
         
-    # Konversi Masehi ke Hijriah
     h = Gregorian(tanggal.year, tanggal.month, tanggal.day).to_hijri()
     
-    # Tabel Data Konversi Bulan Kelahiran
     konversi_bulan = {
         1: 35, 2: 43, 3: 26, 4: 28, 5: 30, 6: 28,
         7: 30, 8: 32, 9: 35, 10: 24, 11: 29, 12: 17
     }
     
-    # Tabel Data Konversi Tanggal dan Tahun Kelahiran
     konversi_tgl_tahun = {
         1: 37, 2: 45, 3: 28, 4: 30, 5: 32, 6: 30, 7: 32, 8: 34, 9: 37, 10: 26,
         11: 31, 12: 19, 13: 41, 14: 30, 15: 34, 16: 21, 17: 27, 18: 16, 19: 44, 20: 26,
@@ -113,23 +109,15 @@ def hitung_juz_hijriah(tanggal):
         31: 38
     }
     
-    # 1. Konversi Tanggal Lahir (Hijriah)
     nilai_tgl = konversi_tgl_tahun.get(h.day, 0)
-    
-    # 2. Konversi Bulan Lahir (Hijriah)
     nilai_bln = konversi_bulan.get(h.month, 0)
     
-    # 3. Konversi Tahun Lahir (Hijriah: Penjumlahan digit tahun)
     sum_tahun = sum(int(digit) for digit in str(h.year))
     nilai_thn = konversi_tgl_tahun.get(sum_tahun, 0)
     
-    # 4. Kalkulasi Total Gabungan
     total_gabungan = nilai_tgl + nilai_bln + nilai_thn
-    
-    # 5. Pengurangan dengan Angka Pengurang (19)
     total_kurang_19 = total_gabungan - 19
     
-    # 6. Menentukan Juz (Sisa bagi 30)
     juz = total_kurang_19 % 30
     juz = 30 if juz == 0 else juz
     
@@ -139,15 +127,12 @@ def hitung_juz_hijriah(tanggal):
 
 
 def clean_txt(text):
-    """Pembersih karakter non-latin dan spasi perusak agar FPDF tidak error saat cetak"""
     if not isinstance(text, str): return str(text)
     
-    # Membersihkan simbol mistis dan spasi non-breaking yang merusak multi_cell
     replacements = {
         "‘": "'", "’": "'", "“": '"', "”": '"', "–": "-", "—": "-",
         "✧": "*", "✦": "*", "✨": "", "💎": "", "📅": "", "🌙": "", "⚠️": "",
-        chr(160): " ", # Hapus Non-breaking space
-        "\r": "" # Hapus carriage return
+        chr(160): " ", "\r": ""
     }
     for k, v in replacements.items():
         text = text.replace(k, v)
@@ -160,54 +145,44 @@ def clean_txt(text):
 # ==========================================
 class MysticalPDF(FPDF):
     def header(self):
-        # Garis tepi (Border) mistis ganda
-        self.set_draw_color(139, 115, 85) # Warna Coklat Keemasan Kuno (Tembaga)
-        self.set_line_width(1)
-        self.rect(5, 5, 200, 287) # Garis luar tebal
-        self.set_line_width(0.3)
-        self.rect(7, 7, 196, 283) # Garis dalam tipis
+        # MENGGUNAKAN LOCAL_CONTEXT AGAR PERUBAHAN MARGIN TIDAK BOCOR KE TEKS UTAMA
+        with self.local_context():
+            self.set_draw_color(139, 115, 85)
+            self.set_line_width(1)
+            self.rect(5, 5, 200, 287) 
+            self.set_line_width(0.3)
+            self.rect(7, 7, 196, 283) 
+            
+            self.set_font("Times", 'B', 16)
+            self.set_text_color(139, 115, 85)
+            self.set_xy(9, 8)
+            self.cell(10, 10, "*", align="L")
+            self.set_xy(191, 8)
+            self.cell(10, 10, "*", align="R")
         
-        # Ornamen pojok (Menggunakan ASCII agar tidak error di FPDF)
-        self.set_font("Times", 'B', 16)
-        self.set_text_color(139, 115, 85)
-        self.set_xy(9, 8)
-        self.cell(10, 10, "*", align="L")
-        self.set_xy(191, 8)
-        self.cell(10, 10, "*", align="R")
-        
-        # PENTING: Kembalikan kursor ke margin kiri yang aman
-        # Ini mencegah Error "Not enough horizontal space" saat terjadi page break
-        self.set_xy(10, 20)
+        # Posisikan Y awal untuk teks utama setelah header selesai
+        self.set_y(20)
 
     def footer(self):
-        # Simpan posisi X, Y saat ini agar multi_cell tidak rusak saat page break
-        saved_x = self.get_x()
-        saved_y = self.get_y()
-        
-        # Ornamen pojok bawah (Menggunakan ASCII)
-        self.set_font("Times", 'B', 16)
-        self.set_text_color(139, 115, 85)
-        self.set_xy(9, 279)
-        self.cell(10, 10, "*", align="L")
-        self.set_xy(191, 279)
-        self.cell(10, 10, "*", align="R")
-        
-        # Penomoran Halaman Bergaya Kuno
-        self.set_y(-15)
-        self.set_x(10)
-        self.set_font("Times", 'I', 10)
-        self.set_text_color(100, 100, 100)
-        self.cell(0, 10, f"~ Lembar Penyingkapan {self.page_no()} ~", align='C')
-        
-        # Kembalikan posisi X, Y ke state sebelum footer dipanggil
-        self.set_xy(saved_x, saved_y)
+        # MENGGUNAKAN LOCAL_CONTEXT AGAR ERROR "NOT ENOUGH HORIZONTAL SPACE" TERATASI
+        with self.local_context():
+            self.set_font("Times", 'B', 16)
+            self.set_text_color(139, 115, 85)
+            self.set_xy(9, 279)
+            self.cell(10, 10, "*", align="L")
+            self.set_xy(191, 279)
+            self.cell(10, 10, "*", align="R")
+            
+            self.set_y(-15)
+            self.set_font("Times", 'I', 10)
+            self.set_text_color(100, 100, 100)
+            self.cell(0, 10, f"~ Lembar Penyingkapan {self.page_no()} ~", align='C')
 
 
 def buat_pdf(nama, tgl_lahir_str, tgl_hijriah_str, tgl_rincian_str, total_nama, surat, total_tgl, juz, profil):
     pdf = MysticalPDF() 
     pdf.add_page()
     
-    # Header Utama & Judul
     pdf.set_font("Times", 'B', 22)
     pdf.set_text_color(40, 30, 20)
     pdf.cell(0, 10, txt="M A N U S K R I P   N G A J I   D I R I", ln=True, align='C')
@@ -216,12 +191,10 @@ def buat_pdf(nama, tgl_lahir_str, tgl_hijriah_str, tgl_rincian_str, total_nama, 
     pdf.cell(0, 6, txt="~ Ekstraksi Resonansi Jiwa & Manifestasi Nasib ~", ln=True, align='C')
     pdf.ln(3)
     
-    # Garis Pembatas Mistis (ASCII)
     pdf.set_font("Times", '', 14)
     pdf.cell(0, 5, txt="* * * * *", ln=True, align='C')
     pdf.ln(8)
     
-    # 1. Identitas & Model Matematis
     pdf.set_font("Times", 'B', 13)
     pdf.set_text_color(40, 30, 20)
     pdf.cell(0, 8, txt="I. INSKRIPSI IDENTITAS KOSMIK", ln=True)
@@ -231,7 +204,6 @@ def buat_pdf(nama, tgl_lahir_str, tgl_hijriah_str, tgl_rincian_str, total_nama, 
     pdf.cell(0, 6, txt=f"   Titik Kehadiran (H)  : {tgl_hijriah_str}", ln=True)
     pdf.ln(4)
     
-    # Batiniah
     pdf.set_font("Times", 'B', 11)
     pdf.cell(0, 6, txt="   [+] Dimensi Batiniah (Pola Jiwa)", ln=True)
     pdf.set_font("Times", 'I', 11)
@@ -239,7 +211,6 @@ def buat_pdf(nama, tgl_lahir_str, tgl_hijriah_str, tgl_rincian_str, total_nama, 
     pdf.cell(0, 6, txt=f"       Resonansi Surah Al-Qur'an: Ke-{surat} (Portal Niat & Pola Pikir)", ln=True)
     pdf.ln(2)
     
-    # Lahiriah
     pdf.set_font("Times", 'B', 11)
     pdf.cell(0, 6, txt="   [+] Dimensi Lahiriah (Manifestasi Tindakan)", ln=True)
     pdf.set_font("Times", 'I', 11)
@@ -252,7 +223,6 @@ def buat_pdf(nama, tgl_lahir_str, tgl_hijriah_str, tgl_rincian_str, total_nama, 
     pdf.cell(0, 5, txt="~ * ~", ln=True, align='C')
     pdf.ln(5)
     
-    # 2. Detail Karakter
     if profil:
         pdf.set_text_color(40, 30, 20)
         pdf.set_font("Times", 'B', 13)
@@ -316,18 +286,14 @@ def buat_pdf(nama, tgl_lahir_str, tgl_hijriah_str, tgl_rincian_str, total_nama, 
         
     return pdf.output(dest='S').encode('latin-1')
 
-
 # ==========================================
 # 3. ANTARMUKA PENGGUNA (UI)
 # ==========================================
-
 st.title("📖 Ngaji Diri: Pemetaan Karakter")
 st.markdown("""
 ### Membaca Potensi, Memahami Fitrah
 Bukan sebuah ramalan, melainkan ruang untuk **Ngaji Diri**. 
 Aplikasi ini hadir sebagai cermin untuk membedah profil batiniah (Nama) dan lahiriah (Tanggal Lahir) Anda melalui pendekatan numerologi tradisional dan pola ayat Al-Qur'an. 
-
-Tujuannya agar kita lebih memahami potensi diri, titik buta (*blind spots*), serta bagaimana cara terbaik untuk berinteraksi dengan dunia di sekitar kita.
 """)
 st.write("") 
 
@@ -352,11 +318,8 @@ st.divider()
 
 if tombol_analisis:
     if nama_input and tanggal_input:
-        
-        # Eksekusi Mesin Hitung Nama
         val_nama, nilai_surat = hitung_hisab_jumal(nama_input)
         
-        # Konversi Tanggal ke Hijriah & Kalkulasi
         nilai_juz, total_kalkulasi, tgl_rincian_str, h_date = hitung_juz_hijriah(tanggal_input)
         nama_bulan_h = BULAN_HIJRIAH[h_date.month - 1]
         tgl_hijriah_str = f"{h_date.day:02d} {nama_bulan_h} {h_date.year} H"
@@ -366,11 +329,9 @@ if tombol_analisis:
         else:
             st.success(f"🎉 Pemetaan profil berhasil disusun untuk: **{nama_input.upper()}**")
             
-            # Tampilan Informasi Tanggal Lengkap
             st.markdown(f"**📅 Tanggal Lahir (Masehi):** {tanggal_input.strftime('%d/%m/%Y')} &nbsp;&nbsp;|&nbsp;&nbsp; **🌙 Tanggal Lahir (Hijriah):** {tgl_hijriah_str}")
             st.write("")
             
-            # --- BAGIAN 1: Batiniah ---
             st.header("🌌 Dimensi Batiniah (Karakter Jiwa)")
             st.markdown("Cerminan dari pola pikir terdalam, niat rahasia, dan hasrat yang seringkali tidak terlihat oleh orang lain.")
             
@@ -382,7 +343,6 @@ if tombol_analisis:
             st.info(f"**Surat ke-{nilai_surat}** menuntun frekuensi batin Anda. *(Segera hadir: Penjelasan detail untuk 114 Surah Al-Qur'an)*.")
             st.divider()
 
-            # --- BAGIAN 2: Lahiriah ---
             st.header("🌍 Dimensi Lahiriah (Karakter Tindakan)")
             st.markdown("Menggambarkan cara Anda bersosialisasi, bekerja, bereaksi terhadap tekanan, dan memecahkan masalah di dunia nyata berdasarkan penanggalan Hijriah.")
             
@@ -434,7 +394,6 @@ if tombol_analisis:
 
             st.divider()
 
-            # --- BAGIAN 3: Unduh PDF ---
             tgl_str = tanggal_input.strftime("%d/%m/%Y")
             pdf_data = buat_pdf(nama_input, tgl_str, tgl_hijriah_str, tgl_rincian_str, val_nama, nilai_surat, total_kalkulasi, nilai_juz, profil)
             
@@ -447,7 +406,6 @@ if tombol_analisis:
             )
             st.write("")
 
-            # --- BAGIAN 4: Sintesis ---
             st.header("⚖️ Sintesis Kepribadian")
             st.markdown(f"Dinamika perpaduan antara batin (**Surah ke-{nilai_surat}**) dan tindakan lahiriah (**Juz {nilai_juz}**):")
             

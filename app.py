@@ -3,7 +3,7 @@ import streamlit as st
 import datetime
 from database_juz import db_juz
 from fpdf import FPDF
-from hijri_converter import Gregorian # Menggunakan hijri_converter sesuai permintaan sebelumnya
+from hijridate import Gregorian
 
 # Hubungan indeks bulan dengan nama bulan Hijriah standar
 BULAN_HIJRIAH = [
@@ -139,15 +139,13 @@ def hitung_juz_hijriah(tanggal):
 
 
 def clean_txt(text):
-    """Pembersih karakter non-latin dan spasi perusak agar FPDF tidak error saat cetak"""
+    """Pembersih karakter non-latin agar FPDF tidak error saat cetak"""
     if not isinstance(text, str): return str(text)
     
-    # Membersihkan simbol mistis dan spasi non-breaking yang merusak multi_cell
+    # Membersihkan simbol yang berisiko membuat FPDF crash
     replacements = {
         "‘": "'", "’": "'", "“": '"', "”": '"', "–": "-", "—": "-",
-        "✧": "*", "✦": "*", "✨": "", "💎": "", "📅": "", "🌙": "", "⚠️": "",
-        chr(160): " ", # Hapus Non-breaking space
-        "\r": "" # Hapus carriage return
+        "✧": "*", "✦": "*", "✨": "", "💎": "", "📅": "", "🌙": "", "⚠️": ""
     }
     for k, v in replacements.items():
         text = text.replace(k, v)
@@ -175,15 +173,10 @@ class MysticalPDF(FPDF):
         self.set_xy(191, 8)
         self.cell(10, 10, "*", align="R")
         
-        # PENTING: Kembalikan kursor ke margin kiri yang aman
-        # Ini mencegah Error "Not enough horizontal space" saat terjadi page break
-        self.set_xy(10, 20)
+        # Kembalikan kursor ke posisi aman untuk isi teks
+        self.set_y(15)
 
     def footer(self):
-        # Simpan posisi X, Y saat ini agar multi_cell tidak rusak saat page break
-        saved_x = self.get_x()
-        saved_y = self.get_y()
-        
         # Ornamen pojok bawah (Menggunakan ASCII)
         self.set_font("Times", 'B', 16)
         self.set_text_color(139, 115, 85)
@@ -194,13 +187,9 @@ class MysticalPDF(FPDF):
         
         # Penomoran Halaman Bergaya Kuno
         self.set_y(-15)
-        self.set_x(10)
         self.set_font("Times", 'I', 10)
         self.set_text_color(100, 100, 100)
-        self.cell(0, 10, f"~ Lembar Penyingkapan {self.page_no()} ~", align='C')
-        
-        # Kembalikan posisi X, Y ke state sebelum footer dipanggil
-        self.set_xy(saved_x, saved_y)
+        self.cell(0, 10, f"~ Lembar Penyingkapan {self.page_no()} ~", 0, 0, 'C')
 
 
 def buat_pdf(nama, tgl_lahir_str, tgl_hijriah_str, tgl_rincian_str, total_nama, surat, total_tgl, juz, profil):
@@ -209,7 +198,7 @@ def buat_pdf(nama, tgl_lahir_str, tgl_hijriah_str, tgl_rincian_str, total_nama, 
     
     # Header Utama & Judul
     pdf.set_font("Times", 'B', 22)
-    pdf.set_text_color(40, 30, 20)
+    pdf.set_text_color(40, 30, 20) # Warna Dark Charcoal / Tinta Kuno
     pdf.cell(0, 10, txt="M A N U S K R I P   N G A J I   D I R I", ln=True, align='C')
     pdf.set_font("Times", 'I', 12)
     pdf.set_text_color(139, 115, 85)
@@ -295,6 +284,8 @@ def buat_pdf(nama, tgl_lahir_str, tgl_hijriah_str, tgl_rincian_str, total_nama, 
         pdf.set_font("Times", 'B', 11)
         pdf.cell(0, 6, txt="Pola Manifestasi & Strategi Kehidupan:", ln=True)
         pdf.set_font("Times", '', 11)
+        
+        # PERBAIKAN: Spasi ganda dihapus dari area ini
         pdf.multi_cell(0, 5, txt=f"- Taktik Komunikasi: {clean_txt(analisa.get('taktis', '-'))}", align='L')
         pdf.multi_cell(0, 5, txt=f"- Dinamika Emosi: {clean_txt(analisa.get('negatif_positif', '-'))}", align='L')
         pdf.multi_cell(0, 5, txt=f"- Resolusi Konflik: {clean_txt(analisa.get('jalan_keluar', '-'))}", align='L')

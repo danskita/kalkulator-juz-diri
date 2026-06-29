@@ -141,103 +141,165 @@ def clean_txt(text):
     if not isinstance(text, str): return str(text)
     return text.replace("‘", "'").replace("’", "'").replace("“", '"').replace("”", '"').replace("–", "-").encode('latin-1', 'ignore').decode('latin-1')
 
+# ==========================================
+# FUNGSI PEMBUAT PDF (TEMA MISTIS / MANUSKRIP KUNO)
+# ==========================================
+
+class MysticalPDF(FPDF):
+    def header(self):
+        # Garis tepi (Border) mistis ganda
+        self.set_draw_color(139, 115, 85) # Warna Coklat Keemasan Kuno (Tembaga)
+        self.set_line_width(1)
+        self.rect(5, 5, 200, 287) # Garis luar tebal
+        self.set_line_width(0.3)
+        self.rect(7, 7, 196, 283) # Garis dalam tipis
+        
+        # Ornamen pojok mistis (Simbol Star/Diamond)
+        self.set_font("Times", 'B', 16)
+        self.set_text_color(139, 115, 85)
+        self.set_xy(9, 8)
+        self.cell(10, 10, "✧", align="L")
+        self.set_xy(191, 8)
+        self.cell(10, 10, "✧", align="R")
+        
+        # Kembalikan kursor ke posisi aman untuk isi teks
+        self.set_y(15)
+
+    def footer(self):
+        # Ornamen pojok bawah
+        self.set_font("Times", 'B', 16)
+        self.set_text_color(139, 115, 85)
+        self.set_xy(9, 279)
+        self.cell(10, 10, "✧", align="L")
+        self.set_xy(191, 279)
+        self.cell(10, 10, "✧", align="R")
+        
+        # Penomoran Halaman Bergaya Kuno
+        self.set_y(-15)
+        self.set_font("Times", 'I', 10)
+        self.set_text_color(100, 100, 100)
+        self.cell(0, 10, f"~ Lembar Penyingkapan {self.page_no()} ~", 0, 0, 'C')
+
+def clean_txt(text):
+    """Pembersih karakter non-latin agar FPDF tidak error saat cetak"""
+    if not isinstance(text, str): return str(text)
+    return text.replace("‘", "'").replace("’", "'").replace("“", '"').replace("”", '"').replace("–", "-").encode('latin-1', 'ignore').decode('latin-1')
+
 def buat_pdf(nama, tgl_lahir_str, tgl_hijriah_str, tgl_rincian_str, total_nama, surat, total_tgl, juz, profil):
-    pdf = FPDF()
+    pdf = MysticalPDF() # Menggunakan kelas PDF kustom yang baru kita buat
     pdf.add_page()
     
-    # Header & Judul
-    pdf.set_font("Arial", 'B', 16)
-    pdf.cell(0, 10, txt="Hasil Pemetaan Karakter - Ngaji Diri", ln=True, align='C')
-    pdf.line(10, 20, 200, 20)
-    pdf.ln(5)
-    
-    # 1. Identitas & Model Matematis
-    pdf.set_font("Arial", 'B', 12)
-    pdf.cell(0, 8, txt="1. IDENTITAS & RUMUS MATEMATIS", ln=True)
-    pdf.set_font("Arial", '', 11)
-    pdf.cell(0, 6, txt=f"Nama Lengkap : {clean_txt(nama).upper()}", ln=True)
-    pdf.cell(0, 6, txt=f"Tanggal Lahir (Masehi)  : {tgl_lahir_str}", ln=True)
-    pdf.cell(0, 6, txt=f"Tanggal Lahir (Hijriah) : {tgl_hijriah_str}", ln=True)
+    # Header Utama & Judul
+    pdf.set_font("Times", 'B', 22)
+    pdf.set_text_color(40, 30, 20) # Warna Dark Charcoal / Tinta Kuno
+    pdf.cell(0, 10, txt="M A N U S K R I P   N G A J I   D I R I", ln=True, align='C')
+    pdf.set_font("Times", 'I', 12)
+    pdf.set_text_color(139, 115, 85)
+    pdf.cell(0, 6, txt="~ Ekstraksi Resonansi Jiwa & Manifestasi Nasib ~", ln=True, align='C')
     pdf.ln(3)
     
-    pdf.set_font("Arial", 'I', 11)
-    pdf.cell(0, 6, txt="a. Dimensi Batiniah (Karakter Jiwa dari Nama)", ln=True)
-    pdf.set_font("Arial", '', 11)
-    pdf.cell(0, 6, txt=f"    - Total Nilai Numerik Hisab Jumal = {total_nama}", ln=True)
-    pdf.cell(0, 6, txt=f"    - Resonansi Surah Al-Qur'an = {total_nama} mod 114 = Surat Ke-{surat}", ln=True)
+    # Garis Pembatas Mistis
+    pdf.set_font("Times", '', 14)
+    pdf.cell(0, 5, txt="✦  ✧  ✦  ✧  ✦", ln=True, align='C')
+    pdf.ln(8)
+    
+    # 1. Identitas & Model Matematis
+    pdf.set_font("Times", 'B', 13)
+    pdf.set_text_color(40, 30, 20)
+    pdf.cell(0, 8, txt="I. INSKRIPSI IDENTITAS KOSMIK", ln=True)
+    pdf.set_font("Times", '', 11)
+    pdf.cell(0, 6, txt=f"   Nama Entitas         : {clean_txt(nama).upper()}", ln=True)
+    pdf.cell(0, 6, txt=f"   Titik Kehadiran (M)  : {tgl_lahir_str}", ln=True)
+    pdf.cell(0, 6, txt=f"   Titik Kehadiran (H)  : {tgl_hijriah_str}", ln=True)
+    pdf.ln(4)
+    
+    # Batiniah
+    pdf.set_font("Times", 'B', 11)
+    pdf.cell(0, 6, txt="   [+] Dimensi Batiniah (Pola Jiwa)", ln=True)
+    pdf.set_font("Times", 'I', 11)
+    pdf.cell(0, 6, txt=f"       Vibrasi Numerik Hisab Jumal : {total_nama}", ln=True)
+    pdf.cell(0, 6, txt=f"       Resonansi Surah Al-Qur'an   : Ke-{surat} (Portal Niat & Pola Pikir)", ln=True)
     pdf.ln(2)
     
-    pdf.set_font("Arial", 'I', 11)
-    pdf.cell(0, 6, txt="b. Dimensi Lahiriah (Karakter Tindakan Konversi Hijriah)", ln=True)
-    pdf.set_font("Arial", '', 11)
-    pdf.cell(0, 6, txt=f"    - Pola Hitung (Konversi Tabel) = {tgl_rincian_str}", ln=True)
-    pdf.cell(0, 6, txt=f"    - Total Angka Kalkulasi = {total_tgl}", ln=True)
-    pdf.cell(0, 6, txt=f"    - Resonansi Juz Al-Qur'an = {total_tgl} mod 30 = Juz {juz}", ln=True)
+    # Lahiriah
+    pdf.set_font("Times", 'B', 11)
+    pdf.cell(0, 6, txt="   [+] Dimensi Lahiriah (Manifestasi Tindakan)", ln=True)
+    pdf.set_font("Times", 'I', 11)
+    pdf.cell(0, 6, txt=f"       Pola Hitung Leluhur    : {tgl_rincian_str}", ln=True)
+    pdf.cell(0, 6, txt=f"       Hasil Kalkulasi Akhir  : {total_tgl}", ln=True)
+    pdf.cell(0, 6, txt=f"       Resonansi Juz Al-Qur'an: Juz {juz}", ln=True)
     pdf.ln(6)
-    pdf.line(10, pdf.get_y(), 200, pdf.get_y())
-    pdf.ln(4)
+    
+    pdf.set_text_color(139, 115, 85)
+    pdf.cell(0, 5, txt="~ ✧ ~", ln=True, align='C')
+    pdf.ln(5)
     
     # 2. Detail Karakter
     if profil:
-        pdf.set_font("Arial", 'B', 12)
-        pdf.cell(0, 8, txt="2. PROFIL KARAKTER LAHIRIAH (HASIL JUZ)", ln=True)
+        pdf.set_text_color(40, 30, 20)
+        pdf.set_font("Times", 'B', 13)
+        pdf.cell(0, 8, txt="II. PEMBACAAN FITRAH & MANIFESTASI KARAKTER", ln=True)
         pdf.ln(2)
         
-        pdf.set_font("Arial", 'B', 11)
-        pdf.cell(0, 6, txt=f"Julukan Utama : {clean_txt(profil.get('julukan', '-'))}", ln=True)
-        pdf.set_font("Arial", 'I', 10)
+        pdf.set_font("Times", 'B', 12)
+        pdf.cell(0, 6, txt=f"Gelar Kejiwaan : {clean_txt(profil.get('julukan', '-'))}", ln=True)
+        pdf.set_font("Times", 'I', 11)
+        pdf.set_text_color(120, 90, 40)
         pdf.cell(0, 6, txt=f"Filosofi Huruf   : {clean_txt(profil.get('huruf', '-'))}", ln=True)
         pdf.ln(3)
         
-        pdf.set_font("Arial", 'B', 11)
+        pdf.set_text_color(40, 30, 20)
+        pdf.set_font("Times", 'B', 11)
         pdf.cell(0, 6, txt="Gambaran Kepribadian:", ln=True)
-        pdf.set_font("Arial", '', 10)
-        pdf.multi_cell(0, 5, txt=clean_txt(profil.get('deskripsi_umum', '-')))
+        pdf.set_font("Times", '', 11)
+        pdf.multi_cell(0, 5, txt=clean_txt(profil.get('deskripsi_umum', '-')), align='J')
         pdf.ln(3)
         
-        pdf.set_font("Arial", 'B', 11)
-        pdf.cell(0, 6, txt="Resonansi Teks & Surah:", ln=True)
-        pdf.set_font("Arial", '', 10)
-        pdf.multi_cell(0, 5, txt=clean_txt(profil.get('detail_surah', '-')))
+        pdf.set_font("Times", 'B', 11)
+        pdf.cell(0, 6, txt="Korelasi Energi Surah (Ruhani):", ln=True)
+        pdf.set_font("Times", '', 11)
+        pdf.multi_cell(0, 5, txt=clean_txt(profil.get('detail_surah', '-')), align='J')
         pdf.ln(3)
         
-        pdf.set_font("Arial", 'B', 11)
-        pdf.cell(0, 6, txt="Potensi (Kelebihan):", ln=True)
-        pdf.set_font("Arial", '', 10)
-        pdf.multi_cell(0, 5, txt=clean_txt(profil.get('kelebihan', '-')))
+        pdf.set_font("Times", 'B', 11)
+        pdf.cell(0, 6, txt="Anugerah (Potensi & Kelebihan):", ln=True)
+        pdf.set_font("Times", '', 11)
+        pdf.multi_cell(0, 5, txt=clean_txt(profil.get('kelebihan', '-')), align='J')
         pdf.ln(2)
         
-        pdf.set_font("Arial", 'B', 11)
-        pdf.cell(0, 6, txt="Titik Buta (Kekurangan):", ln=True)
-        pdf.set_font("Arial", '', 10)
-        pdf.multi_cell(0, 5, txt=clean_txt(profil.get('kekurangan', '-')))
+        pdf.set_font("Times", 'B', 11)
+        pdf.cell(0, 6, txt="Titik Bayangan (Sisi Lemah & Kekurangan):", ln=True)
+        pdf.set_font("Times", '', 11)
+        pdf.multi_cell(0, 5, txt=clean_txt(profil.get('kekurangan', '-')), align='J')
         pdf.ln(3)
         
         analisa = profil.get('analisa_halaman', {})
-        pdf.set_font("Arial", 'B', 11)
-        pdf.cell(0, 6, txt="Strategi Diri & Gaya Pendekatan Masalah:", ln=True)
-        pdf.set_font("Arial", '', 10)
-        pdf.multi_cell(0, 5, txt=f"- Taktik Komunikasi: {clean_txt(analisa.get('taktis', '-'))}")
-        pdf.multi_cell(0, 5, txt=f"- Dinamika Emosi: {clean_txt(analisa.get('negatif_positif', '-'))}")
-        pdf.multi_cell(0, 5, txt=f"- Resolusi Konflik: {clean_txt(analisa.get('jalan_keluar', '-'))}")
-        pdf.multi_cell(0, 5, txt=f"- Fondasi Karakter: {clean_txt(analisa.get('dasar', '-'))}")
+        pdf.set_font("Times", 'B', 11)
+        pdf.cell(0, 6, txt="Pola Manifestasi & Strategi Kehidupan:", ln=True)
+        pdf.set_font("Times", '', 11)
+        pdf.multi_cell(0, 5, txt=f"- Taktik Komunikasi : {clean_txt(analisa.get('taktis', '-'))}", align='J')
+        pdf.multi_cell(0, 5, txt=f"- Dinamika Emosi    : {clean_txt(analisa.get('negatif_positif', '-'))}", align='J')
+        pdf.multi_cell(0, 5, txt=f"- Resolusi Konflik  : {clean_txt(analisa.get('jalan_keluar', '-'))}", align='J')
+        pdf.multi_cell(0, 5, txt=f"- Fondasi Karakter  : {clean_txt(analisa.get('dasar', '-'))}", align='J')
         pdf.ln(3)
         
-        pdf.set_font("Arial", 'B', 11)
-        pdf.cell(0, 6, txt="Profil Medis (Kelemahan Fisik):", ln=True)
-        pdf.set_font("Arial", '', 10)
+        pdf.set_font("Times", 'B', 11)
+        pdf.cell(0, 6, txt="Simpul Kelemahan Wadag (Fisik & Medis):", ln=True)
+        pdf.set_font("Times", '', 11)
         fisik_list = profil.get('kelemahan_fisik', [])
-        pdf.multi_cell(0, 5, txt=clean_txt("- Organ Rentan: " + ", ".join(fisik_list)))
-        pdf.multi_cell(0, 5, txt=clean_txt("- Risiko Penyakit: " + profil.get('risiko_penyakit', '-')))
+        pdf.multi_cell(0, 5, txt=clean_txt("- Organ Rentan: " + ", ".join(fisik_list)), align='J')
+        pdf.multi_cell(0, 5, txt=clean_txt("- Risiko Penyakit Psikosomatis: " + profil.get('risiko_penyakit', '-')), align='J')
         pdf.ln(3)
         
-        pdf.set_font("Arial", 'B', 11)
-        pdf.cell(0, 6, txt="Rekomendasi Profesi/Sektor Usaha:", ln=True)
-        pdf.set_font("Arial", '', 10)
-        pdf.multi_cell(0, 5, txt=clean_txt(profil.get('jenis_usaha', '-')))
+        pdf.set_font("Times", 'B', 11)
+        pdf.cell(0, 6, txt="Jalur Rezeki & Medan Pengabdian (Profesi):", ln=True)
+        pdf.set_font("Times", 'I', 11)
+        pdf.multi_cell(0, 5, txt=clean_txt(profil.get('jenis_usaha', '-')), align='J')
         
     return pdf.output(dest='S').encode('latin-1')
 
+# ==========================================
+# Lanjutkan ke bagian 3. ANTARMUKA PENGGUNA (UI) yang sudah Anda miliki...
 
 # ==========================================
 # 3. ANTARMUKA PENGGUNA (UI)

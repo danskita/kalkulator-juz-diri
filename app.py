@@ -224,16 +224,16 @@ def buat_pdf(nama, tgl_lahir_str, tgl_hijriah_str, tgl_rincian_str, total_nama, 
     pdf.set_font("Times", 'B', 11)
     pdf.cell(0, 6, txt="   [+] Dimensi Batiniah (Pola Jiwa)", ln=True)
     pdf.set_font("Times", 'I', 11)
-    pdf.cell(0, 6, txt=f"       Vibrasi Numerik Hisab Jumal : {total_nama}", ln=True)
-    pdf.cell(0, 6, txt=f"       Resonansi Surah Al-Qur'an   : Ke-{surat} (Portal Niat & Pola Pikir)", ln=True)
+    pdf.cell(0, 6, txt=f"       Vibrasi Numerik Hisab Jumal: {total_nama}", ln=True)
+    pdf.cell(0, 6, txt=f"       Resonansi Surah Al-Qur'an: Ke-{surat} (Portal Niat & Pola Pikir)", ln=True)
     pdf.ln(2)
     
     # Lahiriah
     pdf.set_font("Times", 'B', 11)
     pdf.cell(0, 6, txt="   [+] Dimensi Lahiriah (Manifestasi Tindakan)", ln=True)
     pdf.set_font("Times", 'I', 11)
-    pdf.cell(0, 6, txt=f"       Pola Hitung Leluhur    : {tgl_rincian_str}", ln=True)
-    pdf.cell(0, 6, txt=f"       Hasil Kalkulasi Akhir  : {total_tgl}", ln=True)
+    pdf.cell(0, 6, txt=f"       Pola Hitung Leluhur: {tgl_rincian_str}", ln=True)
+    pdf.cell(0, 6, txt=f"       Hasil Kalkulasi Akhir: {total_tgl}", ln=True)
     pdf.cell(0, 6, txt=f"       Resonansi Juz Al-Qur'an: Juz {juz}", ln=True)
     pdf.ln(6)
     
@@ -249,10 +249,10 @@ def buat_pdf(nama, tgl_lahir_str, tgl_hijriah_str, tgl_rincian_str, total_nama, 
         pdf.ln(2)
         
         pdf.set_font("Times", 'B', 12)
-        pdf.cell(0, 6, txt=f"Gelar Kejiwaan : {clean_txt(profil.get('julukan', '-'))}", ln=True)
+        pdf.cell(0, 6, txt=f"Gelar Kejiwaan: {clean_txt(profil.get('julukan', '-'))}", ln=True)
         pdf.set_font("Times", 'I', 11)
         pdf.set_text_color(120, 90, 40)
-        pdf.cell(0, 6, txt=f"Filosofi Huruf   : {clean_txt(profil.get('huruf', '-'))}", ln=True)
+        pdf.cell(0, 6, txt=f"Filosofi Huruf: {clean_txt(profil.get('huruf', '-'))}", ln=True)
         pdf.ln(3)
         
         pdf.set_text_color(40, 30, 20)
@@ -284,10 +284,12 @@ def buat_pdf(nama, tgl_lahir_str, tgl_hijriah_str, tgl_rincian_str, total_nama, 
         pdf.set_font("Times", 'B', 11)
         pdf.cell(0, 6, txt="Pola Manifestasi & Strategi Kehidupan:", ln=True)
         pdf.set_font("Times", '', 11)
-        pdf.multi_cell(0, 5, txt=f"- Taktik Komunikasi : {clean_txt(analisa.get('taktis', '-'))}", align='L')
-        pdf.multi_cell(0, 5, txt=f"- Dinamika Emosi    : {clean_txt(analisa.get('negatif_positif', '-'))}", align='L')
-        pdf.multi_cell(0, 5, txt=f"- Resolusi Konflik  : {clean_txt(analisa.get('jalan_keluar', '-'))}", align='L')
-        pdf.multi_cell(0, 5, txt=f"- Fondasi Karakter  : {clean_txt(analisa.get('dasar', '-'))}", align='L')
+        
+        # PERBAIKAN: Spasi ganda dihapus dari area ini
+        pdf.multi_cell(0, 5, txt=f"- Taktik Komunikasi: {clean_txt(analisa.get('taktis', '-'))}", align='L')
+        pdf.multi_cell(0, 5, txt=f"- Dinamika Emosi: {clean_txt(analisa.get('negatif_positif', '-'))}", align='L')
+        pdf.multi_cell(0, 5, txt=f"- Resolusi Konflik: {clean_txt(analisa.get('jalan_keluar', '-'))}", align='L')
+        pdf.multi_cell(0, 5, txt=f"- Fondasi Karakter: {clean_txt(analisa.get('dasar', '-'))}", align='L')
         pdf.ln(3)
         
         pdf.set_font("Times", 'B', 11)

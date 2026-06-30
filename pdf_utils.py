@@ -2,7 +2,7 @@
 import datetime
 from fpdf import FPDF
 
-# Definisi pendukung
+# Definisi pendukung penamaan hari lokal
 HARI_INDONESIA = {
     0: "Senin", 1: "Selasa", 2: "Rabu", 3: "Kamis",
     4: "Jumat", 5: "Sabtu", 6: "Minggu"
@@ -22,13 +22,13 @@ def clean_txt(text):
 class MysticalPDF(FPDF):
     def header(self):
         # Membuat bingkai bergaris ganda di setiap halaman
-        self.set_draw_color(139, 115, 85)
+        self.set_draw_color(139, 115, 85) # Warna Coklat Keemasan Kuno (Tembaga)
         self.set_line_width(1)
-        self.rect(5, 5, 200, 287)
+        self.rect(5, 5, 200, 287) # Garis luar tebal
         self.set_line_width(0.3)
-        self.rect(7, 7, 196, 283)
+        self.rect(7, 7, 196, 283) # Garis dalam tipis
         
-        # Bintang hiasan di sudut atas
+        # Ornamen pojok ASCII
         self.set_font("Times", 'B', 16)
         self.set_text_color(139, 115, 85)
         self.set_xy(9, 8)
@@ -38,7 +38,7 @@ class MysticalPDF(FPDF):
         self.set_y(15)
 
     def footer(self):
-        # Bintang hiasan di sudut bawah & Nomor Halaman
+        # Ornamen pojok bawah & Nomor Halaman
         self.set_font("Times", 'B', 16)
         self.set_text_color(139, 115, 85)
         self.set_xy(9, 279)
@@ -50,9 +50,8 @@ class MysticalPDF(FPDF):
         self.set_text_color(100, 100, 100)
         self.cell(0, 10, f"~ Lembar Penyingkapan {self.page_no()} ~", 0, 0, 'C')
 
-# --- FUNGSI HELPER UNTUK MENCETAK PROFIL LENGKAP ---
 def cetak_profil_lengkap(pdf, profil):
-    """Fungsi ini mencetak seluruh bagian kajian juz (Potensi, Kelemahan, Strategi, Medis, Karir)"""
+    """Fungsi pembantu utama untuk membongkar muatan komponen profil juz ke kertas PDF"""
     if not profil:
         pdf.set_font("Times", 'I', 11)
         pdf.cell(0, 6, txt="Data profil sedang dikonfigurasi.", ln=True)
@@ -121,15 +120,11 @@ def cetak_profil_lengkap(pdf, profil):
     pdf.multi_cell(0, 5, txt=clean_txt(profil.get('jenis_usaha', '-')), align='L')
     pdf.ln(4)
 
-# ==========================================
-# FUNGSI: CETAK PDF TUNGGAL
-# ==========================================
 def buat_pdf_tunggal(nama, tgl_lahir_str, tgl_hijriah_str, tgl_rincian_str, total_nama, surat, total_tgl, juz, profil):
     pdf = MysticalPDF()
     pdf.set_auto_page_break(auto=True, margin=15)
     pdf.add_page()
     
-    # Header Dokumen
     pdf.set_font("Times", 'B', 22)
     pdf.set_text_color(40, 30, 20)
     pdf.cell(0, 10, txt="M A N U S K R I P   N G A J I   D I R I", ln=True, align='C')
@@ -141,7 +136,6 @@ def buat_pdf_tunggal(nama, tgl_lahir_str, tgl_hijriah_str, tgl_rincian_str, tota
     pdf.cell(0, 5, txt="* * * * *", ln=True, align='C')
     pdf.ln(8)
     
-    # I. Identitas Kosmik
     pdf.set_font("Times", 'B', 13)
     pdf.set_text_color(40, 30, 20)
     pdf.cell(0, 8, txt="I. INSKRIPSI IDENTITAS KOSMIK", ln=True)
@@ -170,7 +164,6 @@ def buat_pdf_tunggal(nama, tgl_lahir_str, tgl_hijriah_str, tgl_rincian_str, tota
     pdf.cell(0, 5, txt="~ * ~", ln=True, align='C')
     pdf.ln(5)
     
-    # II. Pembacaan Fitrah (Full)
     pdf.set_text_color(40, 30, 20)
     pdf.set_font("Times", 'B', 13)
     pdf.cell(0, 8, txt="II. PEMBACAAN FITRAH & MANIFESTASI KARAKTER", ln=True)
@@ -178,7 +171,6 @@ def buat_pdf_tunggal(nama, tgl_lahir_str, tgl_hijriah_str, tgl_rincian_str, tota
     
     cetak_profil_lengkap(pdf, profil)
 
-    # III. Amalan Ruhani
     try:
         dt_obj = datetime.datetime.strptime(tgl_lahir_str, "%d/%m/%Y")
         hari_nama = HARI_INDONESIA.get(dt_obj.weekday(), "hari lahir")
@@ -191,20 +183,19 @@ def buat_pdf_tunggal(nama, tgl_lahir_str, tgl_hijriah_str, tgl_rincian_str, tota
     pdf.set_text_color(40, 30, 20)
     pdf.set_font("Times", 'B', 13)
     pdf.cell(0, 8, txt="III. AMALAN RUHANI (SOLUSI LANGIT)", ln=True)
+    
+    # Cetak Keterangan Amalan Solusi Langit Lengkap di PDF
     pdf.set_font("Times", 'I', 11)
-    pdf.multi_cell(0, 5, txt=clean_txt(f"Untuk membuka pintu keberkahan batiniah dan menjemput jalan keluar dari permasalahan hidup, amalkanlah: Bacalah JUZ {juz} Anda minimal satu minggu sekali secara istiqamah, tepat pada hari kelahiran Anda (Hari {hari_nama})."), align='L')
+    teks_langit = f"Untuk membuka pintu keberkahan batiniah dan menjemput jalan keluar dari permasalahan hidup, amalkanlah jalur spiritual ini secara istiqamah: Bacalah JUZ {juz} Anda minimal satu minggu sekali, tepat pada hari kelahiran Anda (Hari {hari_nama}). Jika tidak bisa membaca sendiri, mintalah anak yatim atau fakir miskin yang mampu membaca Al-Qur'an untuk membacakannya, kemudian berilah shodaqoh sepantasnya."
+    pdf.multi_cell(0, 5, txt=clean_txt(teks_langit), align='L')
         
     return pdf.output(dest='S').encode('latin-1')
 
-# ==========================================
-# FUNGSI: CETAK PDF PASANGAN
-# ==========================================
 def buat_pdf_pasangan(nama1, nama2, tgl1_str, tgl2_str, h_str1, h_str2, juz1, juz2, profil1, profil2, prosentase, status_relasi):
     pdf = MysticalPDF()
     pdf.set_auto_page_break(auto=True, margin=15)
     pdf.add_page()
     
-    # --- HEADER RELASI ---
     pdf.set_font("Times", 'B', 22)
     pdf.set_text_color(40, 30, 20)
     pdf.cell(0, 10, txt="M A N U S K R I P   R E L A S I", ln=True, align='C')
@@ -216,7 +207,6 @@ def buat_pdf_pasangan(nama1, nama2, tgl1_str, tgl2_str, h_str1, h_str2, juz1, ju
     pdf.cell(0, 5, txt="* * * * *", ln=True, align='C')
     pdf.ln(6)
     
-    # --- I. IDENTITAS PASANGAN ---
     pdf.set_font("Times", 'B', 13)
     pdf.set_text_color(40, 30, 20)
     pdf.cell(0, 8, txt="I. INSKRIPSI IDENTITAS KOSMIK PASANGAN", ln=True)
@@ -231,7 +221,6 @@ def buat_pdf_pasangan(nama1, nama2, tgl1_str, tgl2_str, h_str1, h_str2, juz1, ju
     pdf.cell(0, 6, txt=f"       Lahir: {tgl2_str} / {h_str2} (Resonansi Juz {juz2})", ln=True)
     pdf.ln(4)
     
-    # --- II. TINGKAT KESELARASAN HUBUNGAN ---
     pdf.set_text_color(139, 115, 85)
     pdf.cell(0, 5, txt="~ * ~", ln=True, align='C')
     pdf.ln(4)
@@ -246,24 +235,21 @@ def buat_pdf_pasangan(nama1, nama2, tgl1_str, tgl2_str, h_str1, h_str2, juz1, ju
     pdf.cell(0, 6, txt=f"Status Relasi: {clean_txt(status_relasi)}", ln=True)
     pdf.ln(6)
 
-    # --- III. PROFIL LENGKAP PIHAK 1 ---
-    pdf.add_page() # Buka halaman baru agar rapi
+    pdf.add_page()
     pdf.set_font("Times", 'B', 14)
     pdf.set_text_color(40, 30, 20)
     pdf.cell(0, 8, txt=f"III. BEDAH FITRAH & POTENSI: {clean_txt(nama1).upper()}", ln=True)
     pdf.ln(2)
     cetak_profil_lengkap(pdf, profil1)
 
-    # --- IV. PROFIL LENGKAP PIHAK 2 ---
-    pdf.add_page() # Buka halaman baru agar rapi
+    pdf.add_page()
     pdf.set_font("Times", 'B', 14)
     pdf.set_text_color(40, 30, 20)
     pdf.cell(0, 8, txt=f"IV. BEDAH FITRAH & POTENSI: {clean_txt(nama2).upper()}", ln=True)
     pdf.ln(2)
     cetak_profil_lengkap(pdf, profil2)
 
-    # --- V. RESEP KEHARMONISAN & SOLUSI ---
-    pdf.add_page() # Halaman Terakhir untuk Solusi
+    pdf.add_page()
     pdf.set_font("Times", 'B', 14)
     pdf.set_text_color(40, 30, 20)
     pdf.cell(0, 8, txt="V. DINAMIKA GESEKAN & RESEP KEHARMONISAN", ln=True)
@@ -271,7 +257,6 @@ def buat_pdf_pasangan(nama1, nama2, tgl1_str, tgl2_str, h_str1, h_str2, juz1, ju
     pdf.multi_cell(0, 5, txt="Gesekan dalam hubungan umumnya dipicu oleh benturan karakter bawaan (Blind Spots). Penyelarasan hubungan tingkat tinggi dapat dicapai apabila masing-masing pihak menurunkan ego dan mengamalkan instruksi berikut:", align='L')
     pdf.ln(3)
     
-    # Menampilkan Titik Buta (Kekurangan) yang berbenturan
     pdf.set_font("Times", 'B', 11)
     pdf.cell(0, 6, txt="Potensi Gesekan (Titik Buta):", ln=True)
     pdf.set_font("Times", '', 11)
@@ -280,7 +265,6 @@ def buat_pdf_pasangan(nama1, nama2, tgl1_str, tgl2_str, h_str1, h_str2, juz1, ju
     pdf.multi_cell(0, 5, txt=f"- Sisi Lemah {clean_txt(nama2.split()[0])}: {clean_txt(profil2.get('kekurangan', '-')) if profil2 else '-'}", align='L')
     pdf.ln(4)
 
-    # Instruksi Resolusi Konflik (Dari 'jalan_keluar')
     pdf.set_font("Times", 'B', 11)
     pdf.cell(0, 6, txt=f"A. Instruksi Resolusi Konflik untuk {clean_txt(nama1.split()[0])}:", ln=True)
     pdf.set_font("Times", 'I', 11)
@@ -295,7 +279,6 @@ def buat_pdf_pasangan(nama1, nama2, tgl1_str, tgl2_str, h_str1, h_str2, juz1, ju
     pdf.multi_cell(0, 5, txt=f"\"{clean_txt(solusi2)}\"", align='L')
     pdf.ln(6)
 
-    # --- VI. SOLUSI LANGIT PASANGAN ---
     try:
         dt_obj1 = datetime.datetime.strptime(tgl1_str, "%d/%m/%Y")
         hari_nama1 = HARI_INDONESIA.get(dt_obj1.weekday(), "hari lahir")
@@ -314,15 +297,15 @@ def buat_pdf_pasangan(nama1, nama2, tgl1_str, tgl2_str, h_str1, h_str2, juz1, ju
     pdf.cell(0, 8, txt="VI. AMALAN RUHANI (SOLUSI LANGIT PASANGAN)", ln=True)
     pdf.set_font("Times", '', 11)
     
-    teks_langit1 = f"1. Bagi {clean_txt(nama1.split()[0])}:\nSangat disarankan untuk mengamalkan pembacaan JUZ {juz1} minimal satu minggu sekali, tepat pada hari {hari_nama1}. Ini berfungsi untuk meredam ego, membuka jalan rezeki, dan melembutkan aura diri di mata pasangan."
-    teks_langit2 = f"2. Bagi {clean_txt(nama2.split()[0])}:\nAmalkanlah pembacaan JUZ {juz2} secara istiqamah minimal satu minggu sekali, tepat pada hari {hari_nama2}. Energi dari lantunan juz ini akan menjadi benteng pelindung rumah tangga/relasi dari energi negatif."
-    teks_penutup = "Jadikan amalan ini sebagai ikhtiar batin bersama untuk menembus hijab permasalahan hidup, menekan potensi konflik, dan menyatukan frekuensi jiwa di bawah naungan rida-Nya."
+    # Cetak Amalan Solusi Langit Pasangan Lengkap di PDF
+    teks_langit1 = f"1. Bagi {clean_txt(nama1.split()[0])}:\nSangat disarankan untuk mengamalkan pembacaan JUZ {juz1} minimal satu minggu sekali, tepat pada hari {hari_nama1}. Ini berfungsi untuk meredam ego, membuka jalan rezeki, dan melembutkan aura diri di mata pasangan. Jika berhalangan membaca, dapat meminta bantuan anak yatim atau fakir miskin yang bisa membaca Al-Qur'an untuk membacakannya dan berilah shodaqoh sepantasnya."
+    teks_langit2 = f"2. Bagi {clean_txt(nama2.split()[0])}:\nAmalkanlah pembacaan JUZ {juz2} secara istiqamah minimal satu minggu sekali, tepat pada hari {hari_nama2}. Energi dari lantunan juz ini akan menjadi benteng pelindung rumah tangga dari gangguan energi negatif. Jika berhalangan, bisa mendelegasikannya kepada anak yatim atau fakir miskin dengan memberikan shodaqoh yang pantas."
+    teks_penutup = "Jadikan amalan spiritual ini sebagai ikhtiar batin bersama untuk menembus hijab permasalahan hidup, menekan potensi konflik emosional, dan menyatukan frekuensi jiwa di bawah naungan rida-Nya."
     
     pdf.multi_cell(0, 5, txt=teks_langit1, align='L')
     pdf.ln(2)
     pdf.multi_cell(0, 5, txt=teks_langit2, align='L')
     pdf.ln(3)
-    
     pdf.set_font("Times", 'I', 11)
     pdf.multi_cell(0, 5, txt=teks_penutup, align='L')
 

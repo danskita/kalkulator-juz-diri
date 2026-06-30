@@ -343,7 +343,12 @@ with st.container():
 
 st.divider()
 
+# --- 1. SIMPAN STATUS KE MEMORI SAAT TOMBOL DITEKAN ---
 if tombol_analisis:
+    st.session_state['analisis_berjalan'] = True
+
+# --- 2. BACA DARI MEMORI (Ganti 'if tombol_analisis:' menjadi ini) ---
+if st.session_state.get('analisis_berjalan', False):
     if nama_input and tanggal_input:
         # Perhitungan Data Utama
         val_nama, nilai_surat = hitung_hisab_jumal(nama_input)

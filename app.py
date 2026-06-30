@@ -2,11 +2,9 @@
 import streamlit as st
 import datetime
 from database_juz import db_juz
-from fpdf import FPDF
 from hijridate import Gregorian
-# File: app.py
-from pdf_utils import buat_pdf_tunggal, buat_pdf_pasangan
 import urllib.parse
+from pdf_utils import buat_pdf_tunggal, buat_pdf_pasangan
 
 # Hubungan indeks bulan dengan nama bulan Hijriah standar
 BULAN_HIJRIAH = [
@@ -15,7 +13,6 @@ BULAN_HIJRIAH = [
     "Ramadhan", "Syawal", "Dzulqa'dah", "Dzulhijjah"
 ]
 
-# Pemetaan nama hari untuk Solusi Langit
 HARI_INDONESIA = {
     0: "Senin", 1: "Selasa", 2: "Rabu", 3: "Kamis",
     4: "Jumat", 5: "Sabtu", 6: "Minggu"
@@ -26,9 +23,6 @@ def konversi_masehi_ke_hijriah(tanggal):
     nama_bulan = BULAN_HIJRIAH[hijri.month - 1]
     return f"{hijri.day:02d} {nama_bulan} {hijri.year} H"
 
-# ==========================================
-# 1. PENGATURAN TEMA & CUSTOM CSS (UI/UX)
-# ==========================================
 st.set_page_config(page_title="Ngaji Diri: Pemetaan Karakter", page_icon="✨", layout="wide")
 
 st.markdown("""
@@ -50,9 +44,6 @@ st.markdown("""
     </style>
 """, unsafe_allow_html=True)
 
-# ==========================================
-# 2. MESIN KALKULATOR & FUNGSI LOGIKA
-# ==========================================
 def hitung_hisab_jumal(nama):
     jumal_dict = {
         'kh': 600, 'ts': 500, 'sy': 300, 'sh': 90, 'dh': 800, 'th': 9, 'zh': 900, 'gh': 1000, 'dz': 700,
@@ -101,14 +92,6 @@ def hitung_prosentase_kecocokan(val1, val2, juz1, juz2):
     if skor >= 85: return skor, "Sangat Harmonis (Satu Frekuensi Jiwa)", "#28a745"
     elif skor >= 70: return skor, "Dinamis (Saling Mengimbangi)", "#17a2b8"
     else: return skor, "Menantang (Butuh Kompromi Luas)", "#ffc107"
-
-def clean_txt(text):
-    if not isinstance(text, str): return str(text)
-    replacements = {"‘": "'", "’": "'", "“": '"', "”": '"', "–": "-", "—": "-", "✧": "*", "✦": "*", "✨": "", "💎": "", "📅": "", "🌙": "", "⚠️": ""}
-    for k, v in replacements.items(): text = text.replace(k, v)
-    return text.encode('latin-1', 'ignore').decode('latin-1')
-
-
 
 def render_profil_lahiriah_ui(nama, val_nama, nilai_surat, tanggal, tgl_hijriah_str, total_kalkulasi, tgl_rincian_str, nilai_juz, profil):
     st.markdown(f"**📅 Penanggalan Masehi:** {tanggal.strftime('%d/%m/%Y')} &nbsp;&nbsp;|&nbsp;&nbsp; **🌙 Penanggalan Hijriah:** {tgl_hijriah_str}")
@@ -161,9 +144,6 @@ def render_profil_lahiriah_ui(nama, val_nama, nilai_surat, tanggal, tgl_hijriah_
     else:
         st.info(f"Teks analisis untuk Juz {nilai_juz} saat ini sedang dikonfigurasi ke dalam sistem.")
 
-# ==========================================
-# 3. ANTARMUKA UTAMA PENGGUNA (UI)
-# ==========================================
 st.markdown("### Membaca Potensi, Memahami Fitrah")
 st.markdown("Aplikasi cermin untuk membedah profil batiniah (Nama) dan lahiriah (Tanggal Lahir) Anda, serta **kalkulasi kecocokan pasangan**.")
 st.write("") 
@@ -196,14 +176,11 @@ with st.container():
 
 st.divider()
 
-# --- 1. SIMPAN STATUS KE MEMORI SAAT TOMBOL DITEKAN ---
 if tombol_analisis:
     st.session_state['analisis_berjalan'] = True
 
-# --- 2. BACA DARI MEMORI (Ganti 'if tombol_analisis:' menjadi ini) ---
 if st.session_state.get('analisis_berjalan', False):
     if nama_input and tanggal_input:
-        # Perhitungan Data Utama
         val_nama, nilai_surat = hitung_hisab_jumal(nama_input)
         nilai_juz, total_kalkulasi, tgl_rincian_str, h_date = hitung_juz_hijriah(tanggal_input)
         nama_bulan_h = BULAN_HIJRIAH[h_date.month - 1]
@@ -212,7 +189,6 @@ if st.session_state.get('analisis_berjalan', False):
         
         analisis_pasangan_aktif = bool(nama_pasangan.strip())
         
-        # LOGIKA TAMPILAN (Pasangan / Tunggal)
         if analisis_pasangan_aktif:
             val_nama_p, nilai_surat_p = hitung_hisab_jumal(nama_pasangan)
             nilai_juz_p, total_kalkulasi_p, tgl_rincian_str_p, h_date_p = hitung_juz_hijriah(tanggal_pasangan)
@@ -275,20 +251,17 @@ if st.session_state.get('analisis_berjalan', False):
             </div>
             """, unsafe_allow_html=True)
             
-        # ==========================================
-        # BLOK DONASI & PDF (SELALU MUNCUL DI BAWAH)
-        # ==========================================
         st.divider()
         st.header("📥 Unduh Laporan Manuskrip PDF")
         
         NOMOR_DANA = "0821-1755-0298" 
-        NOMOR_WHATSAPP = "082295165231" 
+        NOMOR_WHATSAPP = "6282295165231" 
         KODE_AKSES_PDF = "BERKAH2026"
         
         st.markdown(f"""
         <div style="background-color: #f8f9fa; border: 2px solid #007BFF; border-radius: 10px; padding: 20px; text-align: center; margin-top: 20px; margin-bottom: 20px;">
             <h4 style="margin-top:0; color:#007BFF;">Dukung Pengembangan Aplikasi</h4>
-            <p style="margin-bottom:5px;">Untuk mengunduh hasil pemetaan karakter Diri Anda dalam bentuk PDF eksklusif, silakan berikan dukungan seikhlasnya melalui DANA.</p>
+            <p style="margin-bottom:5px;">Untuk mengunduh hasil pemetaan karakter dalam bentuk PDF eksklusif, silakan berikan dukungan seikhlasnya melalui DANA.</p>
             <h2 style="margin:10px 0; color:#28a745;">DANA: {NOMOR_DANA}</h2>
             <p style="font-size:0.9rem; color:#666;">Setelah transfer, kirimkan bukti pembayaran untuk mendapatkan <b>Kode Akses</b> pengunduhan.</p>
         </div>
@@ -304,16 +277,28 @@ if st.session_state.get('analisis_berjalan', False):
         
         if kunci_input:
             if kunci_input.upper() == KODE_AKSES_PDF.upper():
-                st.success("Kode Akses Valid! Silakan unduh Manuskrip Diri Utama (PDF) Anda di bawah ini.")
-                # PDF selalu digenerate untuk Identitas Utama (nama_input)
-                pdf_data = buat_pdf_tunggal(
-                    nama_input, tanggal_input.strftime("%d/%m/%Y"), tgl_hijriah_str, 
-                    tgl_rincian_str, val_nama, nilai_surat, total_kalkulasi, nilai_juz, profil
-                )
+                if analisis_pasangan_aktif:
+                    st.success("Kode Akses Valid! Silakan unduh Manuskrip Relasi Pasangan (PDF) di bawah ini.")
+                    pdf_data = buat_pdf_pasangan(
+                        nama_input, nama_pasangan, 
+                        tanggal_input.strftime("%d/%m/%Y"), tanggal_pasangan.strftime("%d/%m/%Y"), 
+                        tgl_hijriah_str, tgl_hijriah_str_p, 
+                        nilai_juz, nilai_juz_p, profil, profil_p, 
+                        prosentase, deskripsi_status
+                    )
+                    file_pdf_name = f"Ngaji_Relasi_{nama_input.replace(' ', '_')}.pdf"
+                else:
+                    st.success("Kode Akses Valid! Silakan unduh Manuskrip Diri Utama (PDF) di bawah ini.")
+                    pdf_data = buat_pdf_tunggal(
+                        nama_input, tanggal_input.strftime("%d/%m/%Y"), tgl_hijriah_str, 
+                        tgl_rincian_str, val_nama, nilai_surat, total_kalkulasi, nilai_juz, profil
+                    )
+                    file_pdf_name = f"Ngaji_Diri_{nama_input.replace(' ', '_')}.pdf"
+                    
                 st.download_button(
-                    label="📄 Unduh Manuskrip Ngaji Diri (PDF)",
+                    label="📄 Unduh Manuskrip (PDF)",
                     data=pdf_data,
-                    file_name=f"Ngaji_Diri_{nama_input.replace(' ', '_')}.pdf",
+                    file_name=file_pdf_name,
                     mime="application/pdf",
                     use_container_width=True
                 )
@@ -322,3 +307,5 @@ if st.session_state.get('analisis_berjalan', False):
 
     else:
         st.warning("⚠️ Mohon isi Nama Lengkap dan pilih Tanggal Lahir Anda (Identitas Utama) terlebih dahulu.")
+
+# SIMPAN (Ctrl+S)

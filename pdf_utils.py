@@ -10,17 +10,25 @@ HARI_INDONESIA = {
 
 def clean_txt(text):
     if not isinstance(text, str): return str(text)
-    replacements = {"‘": "'", "’": "'", "“": '"', "”": '"', "–": "-", "—": "-", "✧": "*", "✦": "*"}
+    # Membersihkan karakter khusus agar FPDF tidak error (UnicodeEncodeError)
+    replacements = {
+        "‘": "'", "’": "'", "“": '"', "”": '"', "–": "-", "—": "-", 
+        "✧": "*", "✦": "*", "✨": "", "💎": "", "📅": "", "🌙": "", "⚠️": "",
+        "\u2022": "-", "\u2013": "-", "\u2014": "-"
+    }
     for k, v in replacements.items(): text = text.replace(k, v)
     return text.encode('latin-1', 'ignore').decode('latin-1')
 
 class MysticalPDF(FPDF):
     def header(self):
+        # Membuat bingkai bergaris ganda di setiap halaman
         self.set_draw_color(139, 115, 85)
         self.set_line_width(1)
         self.rect(5, 5, 200, 287)
         self.set_line_width(0.3)
         self.rect(7, 7, 196, 283)
+        
+        # Bintang hiasan di sudut atas
         self.set_font("Times", 'B', 16)
         self.set_text_color(139, 115, 85)
         self.set_xy(9, 8)
@@ -30,18 +38,98 @@ class MysticalPDF(FPDF):
         self.set_y(15)
 
     def footer(self):
+        # Bintang hiasan di sudut bawah & Nomor Halaman
+        self.set_font("Times", 'B', 16)
+        self.set_text_color(139, 115, 85)
+        self.set_xy(9, 279)
+        self.cell(10, 10, "*", align="L")
+        self.set_xy(191, 279)
+        self.cell(10, 10, "*", align="R")
         self.set_y(-15)
         self.set_font("Times", 'I', 10)
         self.set_text_color(100, 100, 100)
         self.cell(0, 10, f"~ Lembar Penyingkapan {self.page_no()} ~", 0, 0, 'C')
 
+# --- FUNGSI HELPER UNTUK MENCETAK PROFIL LENGKAP ---
+def cetak_profil_lengkap(pdf, profil):
+    """Fungsi ini mencetak seluruh bagian kajian juz (Potensi, Kelemahan, Strategi, Medis, Karir)"""
+    if not profil:
+        pdf.set_font("Times", 'I', 11)
+        pdf.cell(0, 6, txt="Data profil sedang dikonfigurasi.", ln=True)
+        return
+
+    # 1. Identitas Karakter
+    pdf.set_font("Times", 'B', 12)
+    pdf.set_text_color(40, 30, 20)
+    pdf.cell(0, 6, txt=f"Gelar Kejiwaan: {clean_txt(profil.get('julukan', '-'))}", ln=True)
+    pdf.set_font("Times", 'I', 11)
+    pdf.set_text_color(120, 90, 40)
+    pdf.cell(0, 6, txt=f"Filosofi Huruf: {clean_txt(profil.get('huruf', '-'))}", ln=True)
+    pdf.ln(3)
+
+    # 2. Deskripsi & Resonansi
+    pdf.set_text_color(40, 30, 20)
+    pdf.set_font("Times", 'B', 11)
+    pdf.cell(0, 6, txt="Gambaran Kepribadian:", ln=True)
+    pdf.set_font("Times", '', 11)
+    pdf.multi_cell(0, 5, txt=clean_txt(profil.get('deskripsi_umum', '-')), align='L')
+    pdf.ln(2)
+    
+    pdf.set_font("Times", 'B', 11)
+    pdf.cell(0, 6, txt="Resonansi Teks & Surah:", ln=True)
+    pdf.set_font("Times", '', 11)
+    pdf.multi_cell(0, 5, txt=clean_txt(profil.get('detail_surah', '-')), align='L')
+    pdf.ln(2)
+
+    # 3. Kelebihan & Kekurangan
+    pdf.set_font("Times", 'B', 11)
+    pdf.cell(0, 6, txt="Anugerah (Potensi & Kelebihan):", ln=True)
+    pdf.set_font("Times", '', 11)
+    pdf.multi_cell(0, 5, txt=clean_txt(profil.get('kelebihan', '-')), align='L')
+    pdf.ln(2)
+    
+    pdf.set_font("Times", 'B', 11)
+    pdf.cell(0, 6, txt="Titik Bayangan (Sisi Lemah & Kekurangan):", ln=True)
+    pdf.set_font("Times", '', 11)
+    pdf.multi_cell(0, 5, txt=clean_txt(profil.get('kekurangan', '-')), align='L')
+    pdf.ln(2)
+
+    # 4. Strategi Diri
+    analisa = profil.get('analisa_halaman', {})
+    pdf.set_font("Times", 'B', 11)
+    pdf.cell(0, 6, txt="Pola Manifestasi & Strategi Kehidupan:", ln=True)
+    pdf.set_font("Times", '', 11)
+    pdf.multi_cell(0, 5, txt=f"- Taktik Komunikasi: {clean_txt(analisa.get('taktis', '-'))}", align='L')
+    pdf.multi_cell(0, 5, txt=f"- Dinamika Emosi: {clean_txt(analisa.get('negatif_positif', '-'))}", align='L')
+    pdf.multi_cell(0, 5, txt=f"- Resolusi Konflik: {clean_txt(analisa.get('jalan_keluar', '-'))}", align='L')
+    pdf.multi_cell(0, 5, txt=f"- Fondasi Karakter: {clean_txt(analisa.get('dasar', '-'))}", align='L')
+    pdf.ln(2)
+
+    # 5. Medis
+    pdf.set_font("Times", 'B', 11)
+    pdf.cell(0, 6, txt="Simpul Kelemahan Wadag (Fisik & Medis):", ln=True)
+    pdf.set_font("Times", '', 11)
+    fisik_list = profil.get('kelemahan_fisik', [])
+    pdf.multi_cell(0, 5, txt=clean_txt("- Organ Rentan: " + ", ".join(fisik_list)), align='L')
+    pdf.multi_cell(0, 5, txt=clean_txt("- Risiko Penyakit Psikosomatis: " + profil.get('risiko_penyakit', '-')), align='L')
+    pdf.ln(2)
+
+    # 6. Karir
+    pdf.set_font("Times", 'B', 11)
+    pdf.cell(0, 6, txt="Jalur Rezeki & Medan Pengabdian (Profesi):", ln=True)
+    pdf.set_font("Times", 'I', 11)
+    pdf.multi_cell(0, 5, txt=clean_txt(profil.get('jenis_usaha', '-')), align='L')
+    pdf.ln(4)
+
 # ==========================================
-# 1. PDF UNTUK TUNGGAL (SENDIRI)
+# FUNGSI: CETAK PDF TUNGGAL
 # ==========================================
 def buat_pdf_tunggal(nama, tgl_lahir_str, tgl_hijriah_str, tgl_rincian_str, total_nama, surat, total_tgl, juz, profil):
-    pdf = MysticalPDF() 
+    pdf = MysticalPDF()
+    pdf.set_auto_page_break(auto=True, margin=15)
     pdf.add_page()
     
+    # Header Dokumen
     pdf.set_font("Times", 'B', 22)
     pdf.set_text_color(40, 30, 20)
     pdf.cell(0, 10, txt="M A N U S K R I P   N G A J I   D I R I", ln=True, align='C')
@@ -53,6 +141,7 @@ def buat_pdf_tunggal(nama, tgl_lahir_str, tgl_hijriah_str, tgl_rincian_str, tota
     pdf.cell(0, 5, txt="* * * * *", ln=True, align='C')
     pdf.ln(8)
     
+    # I. Identitas Kosmik
     pdf.set_font("Times", 'B', 13)
     pdf.set_text_color(40, 30, 20)
     pdf.cell(0, 8, txt="I. INSKRIPSI IDENTITAS KOSMIK", ln=True)
@@ -81,55 +170,38 @@ def buat_pdf_tunggal(nama, tgl_lahir_str, tgl_hijriah_str, tgl_rincian_str, tota
     pdf.cell(0, 5, txt="~ * ~", ln=True, align='C')
     pdf.ln(5)
     
-    if profil:
-        pdf.set_text_color(40, 30, 20)
-        pdf.set_font("Times", 'B', 13)
-        pdf.cell(0, 8, txt="II. PEMBACAAN FITRAH & MANIFESTASI KARAKTER", ln=True)
-        pdf.ln(2)
-        pdf.set_font("Times", 'B', 12)
-        pdf.cell(0, 6, txt=f"Gelar Kejiwaan: {clean_txt(profil.get('julukan', '-'))}", ln=True)
-        pdf.set_font("Times", 'I', 11)
-        pdf.set_text_color(120, 90, 40)
-        pdf.cell(0, 6, txt=f"Filosofi Huruf: {clean_txt(profil.get('huruf', '-'))}", ln=True)
-        pdf.ln(3)
-        
-        pdf.set_text_color(40, 30, 20)
-        pdf.set_font("Times", 'B', 11)
-        pdf.cell(0, 6, txt="Gambaran Kepribadian:", ln=True)
-        pdf.set_font("Times", '', 11)
-        pdf.multi_cell(0, 5, txt=clean_txt(profil.get('deskripsi_umum', '-')), align='L')
-        pdf.ln(3)
-        
-        analisa = profil.get('analisa_halaman', {})
-        pdf.set_font("Times", 'B', 11)
-        pdf.cell(0, 6, txt="Pola Manifestasi & Strategi Kehidupan:", ln=True)
-        pdf.set_font("Times", '', 11)
-        pdf.multi_cell(0, 5, txt=f"- Taktik Komunikasi: {clean_txt(analisa.get('taktis', '-'))}", align='L')
-        pdf.multi_cell(0, 5, txt=f"- Resolusi Konflik: {clean_txt(analisa.get('jalan_keluar', '-'))}", align='L')
-        pdf.ln(3)
+    # II. Pembacaan Fitrah (Full)
+    pdf.set_text_color(40, 30, 20)
+    pdf.set_font("Times", 'B', 13)
+    pdf.cell(0, 8, txt="II. PEMBACAAN FITRAH & MANIFESTASI KARAKTER", ln=True)
+    pdf.ln(2)
+    
+    cetak_profil_lengkap(pdf, profil)
 
-        try:
-            dt_obj = datetime.datetime.strptime(tgl_lahir_str, "%d/%m/%Y")
-            hari_nama = HARI_INDONESIA.get(dt_obj.weekday(), "hari lahir")
-        except:
-            hari_nama = "hari lahir"
+    # III. Amalan Ruhani
+    try:
+        dt_obj = datetime.datetime.strptime(tgl_lahir_str, "%d/%m/%Y")
+        hari_nama = HARI_INDONESIA.get(dt_obj.weekday(), "hari lahir")
+    except:
+        hari_nama = "hari lahir"
 
-        pdf.set_text_color(139, 115, 85)
-        pdf.cell(0, 5, txt="~ * ~", ln=True, align='C')
-        pdf.ln(3)
-        pdf.set_text_color(40, 30, 20)
-        pdf.set_font("Times", 'B', 13)
-        pdf.cell(0, 8, txt="III. AMALAN RUHANI (SOLUSI LANGIT)", ln=True)
-        pdf.set_font("Times", 'I', 11)
-        pdf.multi_cell(0, 5, txt=clean_txt(f"Untuk membuka pintu keberkahan batiniah dan menjemput jalan keluar dari permasalahan hidup, amalkanlah: Bacalah JUZ {juz} Anda minimal satu minggu sekali secara istiqamah, tepat pada hari kelahiran Anda (Hari {hari_nama})."), align='L')
+    pdf.set_text_color(139, 115, 85)
+    pdf.cell(0, 5, txt="~ * ~", ln=True, align='C')
+    pdf.ln(3)
+    pdf.set_text_color(40, 30, 20)
+    pdf.set_font("Times", 'B', 13)
+    pdf.cell(0, 8, txt="III. AMALAN RUHANI (SOLUSI LANGIT)", ln=True)
+    pdf.set_font("Times", 'I', 11)
+    pdf.multi_cell(0, 5, txt=clean_txt(f"Untuk membuka pintu keberkahan batiniah dan menjemput jalan keluar dari permasalahan hidup, amalkanlah: Bacalah JUZ {juz} Anda minimal satu minggu sekali secara istiqamah, tepat pada hari kelahiran Anda (Hari {hari_nama})."), align='L')
         
     return pdf.output(dest='S').encode('latin-1')
 
 # ==========================================
-# 2. PDF UNTUK PASANGAN (SANGAT LENGKAP & DETAIL)
+# FUNGSI: CETAK PDF PASANGAN
 # ==========================================
 def buat_pdf_pasangan(nama1, nama2, tgl1_str, tgl2_str, h_str1, h_str2, juz1, juz2, profil1, profil2, prosentase, status_relasi):
     pdf = MysticalPDF()
+    pdf.set_auto_page_break(auto=True, margin=15)
     pdf.add_page()
     
     # --- HEADER RELASI ---
@@ -149,80 +221,66 @@ def buat_pdf_pasangan(nama1, nama2, tgl1_str, tgl2_str, h_str1, h_str2, juz1, ju
     pdf.set_text_color(40, 30, 20)
     pdf.cell(0, 8, txt="I. INSKRIPSI IDENTITAS KOSMIK PASANGAN", ln=True)
     pdf.set_font("Times", 'B', 11)
-    pdf.cell(0, 6, txt=f"   [+] Pihak Pertama : {clean_txt(nama1).upper()}", ln=True)
+    pdf.cell(0, 6, txt=f"   [+] Anda : {clean_txt(nama1).upper()}", ln=True)
     pdf.set_font("Times", '', 11)
     pdf.cell(0, 6, txt=f"       Lahir: {tgl1_str} / {h_str1} (Resonansi Juz {juz1})", ln=True)
     pdf.ln(2)
     pdf.set_font("Times", 'B', 11)
-    pdf.cell(0, 6, txt=f"   [+] Pihak Kedua   : {clean_txt(nama2).upper()}", ln=True)
+    pdf.cell(0, 6, txt=f"   [+] Pasangan Anda   : {clean_txt(nama2).upper()}", ln=True)
     pdf.set_font("Times", '', 11)
     pdf.cell(0, 6, txt=f"       Lahir: {tgl2_str} / {h_str2} (Resonansi Juz {juz2})", ln=True)
     pdf.ln(4)
     
+    # --- II. TINGKAT KESELARASAN HUBUNGAN ---
     pdf.set_text_color(139, 115, 85)
     pdf.cell(0, 5, txt="~ * ~", ln=True, align='C')
     pdf.ln(4)
-    
-    # --- II. PROFIL LENGKAP PIHAK 1 ---
     pdf.set_text_color(40, 30, 20)
     pdf.set_font("Times", 'B', 13)
-    pdf.cell(0, 8, txt=f"II. PEMBACAAN FITRAH: {clean_txt(nama1).upper()}", ln=True)
-    if profil1:
-        pdf.set_font("Times", 'B', 11)
-        pdf.cell(0, 6, txt=f"Karakter Dasar: {clean_txt(profil1.get('julukan', '-'))}", ln=True)
-        pdf.set_font("Times", '', 11)
-        pdf.multi_cell(0, 5, txt=f"Gambaran Kepribadian:\n{clean_txt(profil1.get('deskripsi_umum', '-'))}", align='L')
-        pdf.ln(1)
-        pdf.multi_cell(0, 5, txt=f"Kelebihan (Potensi): {clean_txt(profil1.get('kelebihan', '-'))}", align='L')
-        pdf.ln(1)
-        pdf.multi_cell(0, 5, txt=f"Titik Bayangan (Kekurangan): {clean_txt(profil1.get('kekurangan', '-'))}", align='L')
-    else:
-        pdf.set_font("Times", 'I', 11)
-        pdf.cell(0, 6, txt="Data profil sedang dikonfigurasi.", ln=True)
-    pdf.ln(4)
-
-    # --- III. PROFIL LENGKAP PIHAK 2 ---
-    pdf.set_font("Times", 'B', 13)
-    pdf.cell(0, 8, txt=f"III. PEMBACAAN FITRAH: {clean_txt(nama2).upper()}", ln=True)
-    if profil2:
-        pdf.set_font("Times", 'B', 11)
-        pdf.cell(0, 6, txt=f"Karakter Dasar: {clean_txt(profil2.get('julukan', '-'))}", ln=True)
-        pdf.set_font("Times", '', 11)
-        pdf.multi_cell(0, 5, txt=f"Gambaran Kepribadian:\n{clean_txt(profil2.get('deskripsi_umum', '-'))}", align='L')
-        pdf.ln(1)
-        pdf.multi_cell(0, 5, txt=f"Kelebihan (Potensi): {clean_txt(profil2.get('kelebihan', '-'))}", align='L')
-        pdf.ln(1)
-        pdf.multi_cell(0, 5, txt=f"Titik Bayangan (Kekurangan): {clean_txt(profil2.get('kekurangan', '-'))}", align='L')
-    else:
-        pdf.set_font("Times", 'I', 11)
-        pdf.cell(0, 6, txt="Data profil sedang dikonfigurasi.", ln=True)
-    
-    # === HALAMAN 2: DINAMIKA & SOLUSI ===
-    pdf.add_page()
-    pdf.set_font("Times", 'B', 22)
-    pdf.set_text_color(40, 30, 20)
-    pdf.cell(0, 10, txt="D I N A M I K A   &   S O L U S I", ln=True, align='C')
-    pdf.ln(8)
-
-    # --- IV. TINGKAT KESELARASAN ---
-    pdf.set_text_color(40, 30, 20)
-    pdf.set_font("Times", 'B', 13)
-    pdf.cell(0, 8, txt="IV. TINGKAT KESELARASAN HUBUNGAN", ln=True)
+    pdf.cell(0, 8, txt="II. TINGKAT KESELARASAN HUBUNGAN", ln=True)
     pdf.set_font("Times", 'B', 16)
     pdf.set_text_color(0, 100, 200)
     pdf.cell(0, 10, txt=f"Skor Kecocokan Energi: {prosentase}%", ln=True)
     pdf.set_font("Times", 'B', 11)
     pdf.set_text_color(40, 30, 20)
     pdf.cell(0, 6, txt=f"Status Relasi: {clean_txt(status_relasi)}", ln=True)
-    pdf.ln(4)
+    pdf.ln(6)
 
-    # --- V. RESEP KEHARMONISAN & SOLUSI TINGKAH LAKU ---
-    pdf.set_font("Times", 'B', 13)
-    pdf.cell(0, 8, txt="V. RESEP KEHARMONISAN & PENYELESAIAN KONFLIK", ln=True)
+    # --- III. PROFIL LENGKAP PIHAK 1 ---
+    pdf.add_page() # Buka halaman baru agar rapi
+    pdf.set_font("Times", 'B', 14)
+    pdf.set_text_color(40, 30, 20)
+    pdf.cell(0, 8, txt=f"III. BEDAH FITRAH & POTENSI: {clean_txt(nama1).upper()}", ln=True)
+    pdf.ln(2)
+    cetak_profil_lengkap(pdf, profil1)
+
+    # --- IV. PROFIL LENGKAP PIHAK 2 ---
+    pdf.add_page() # Buka halaman baru agar rapi
+    pdf.set_font("Times", 'B', 14)
+    pdf.set_text_color(40, 30, 20)
+    pdf.cell(0, 8, txt=f"IV. BEDAH FITRAH & POTENSI: {clean_txt(nama2).upper()}", ln=True)
+    pdf.ln(2)
+    cetak_profil_lengkap(pdf, profil2)
+
+    # --- V. RESEP KEHARMONISAN & SOLUSI ---
+    pdf.add_page() # Halaman Terakhir untuk Solusi
+    pdf.set_font("Times", 'B', 14)
+    pdf.set_text_color(40, 30, 20)
+    pdf.cell(0, 8, txt="V. DINAMIKA GESEKAN & RESEP KEHARMONISAN", ln=True)
     pdf.set_font("Times", '', 11)
-    pdf.multi_cell(0, 5, txt="Gesekan dalam hubungan umumnya dipicu oleh benturan karakter bawaan. Penyelarasan hubungan tingkat tinggi dapat dicapai apabila masing-masing pihak menurunkan ego dan mengamalkan instruksi berikut:", align='L')
+    pdf.multi_cell(0, 5, txt="Gesekan dalam hubungan umumnya dipicu oleh benturan karakter bawaan (Blind Spots). Penyelarasan hubungan tingkat tinggi dapat dicapai apabila masing-masing pihak menurunkan ego dan mengamalkan instruksi berikut:", align='L')
     pdf.ln(3)
     
+    # Menampilkan Titik Buta (Kekurangan) yang berbenturan
+    pdf.set_font("Times", 'B', 11)
+    pdf.cell(0, 6, txt="Potensi Gesekan (Titik Buta):", ln=True)
+    pdf.set_font("Times", '', 11)
+    pdf.multi_cell(0, 5, txt=f"- Sisi Lemah {clean_txt(nama1.split()[0])}: {clean_txt(profil1.get('kekurangan', '-')) if profil1 else '-'}", align='L')
+    pdf.ln(1)
+    pdf.multi_cell(0, 5, txt=f"- Sisi Lemah {clean_txt(nama2.split()[0])}: {clean_txt(profil2.get('kekurangan', '-')) if profil2 else '-'}", align='L')
+    pdf.ln(4)
+
+    # Instruksi Resolusi Konflik (Dari 'jalan_keluar')
     pdf.set_font("Times", 'B', 11)
     pdf.cell(0, 6, txt=f"A. Instruksi Resolusi Konflik untuk {clean_txt(nama1.split()[0])}:", ln=True)
     pdf.set_font("Times", 'I', 11)
@@ -237,7 +295,7 @@ def buat_pdf_pasangan(nama1, nama2, tgl1_str, tgl2_str, h_str1, h_str2, juz1, ju
     pdf.multi_cell(0, 5, txt=f"\"{clean_txt(solusi2)}\"", align='L')
     pdf.ln(6)
 
-    # --- VI. SOLUSI LANGIT (AMALAN RUHANI PASANGAN) ---
+    # --- VI. SOLUSI LANGIT PASANGAN ---
     try:
         dt_obj1 = datetime.datetime.strptime(tgl1_str, "%d/%m/%Y")
         hari_nama1 = HARI_INDONESIA.get(dt_obj1.weekday(), "hari lahir")
@@ -265,7 +323,7 @@ def buat_pdf_pasangan(nama1, nama2, tgl1_str, tgl2_str, h_str1, h_str2, juz1, ju
     pdf.multi_cell(0, 5, txt=teks_langit2, align='L')
     pdf.ln(3)
     
-    pdf.set_font("Times", 'B', 11)
+    pdf.set_font("Times", 'I', 11)
     pdf.multi_cell(0, 5, txt=teks_penutup, align='L')
 
     return pdf.output(dest='S').encode('latin-1')
